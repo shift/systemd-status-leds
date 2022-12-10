@@ -1,0 +1,8 @@
+services:
+    - network.target
+    - minecraft.service
+    - multi-user.target
+    - local-exporter.service
+    - node-exporter.service
+strip:
+    length: 5
