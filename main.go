@@ -7,8 +7,6 @@ import (
 	"github.com/godbus/dbus/v5" // namespace collides with systemd wrapper
 	"github.com/shift/fcos-mc-pi4/leds/led"
 	"github.com/shift/fcos-mc-pi4/leds/strip"
-	"os"
-	"reflect"
 	//"periph.io/x/conn/v3/physic"
 	//"periph.io/x/conn/v3/spi"
 	//"periph.io/x/conn/v3/spi/spireg"
@@ -59,36 +57,31 @@ func main() {
 	channels := flag.Int("channels", 4, "number of color channels, use 4 for RGBW")
 	flag.Parse()
 
-	strip, err := strip.Init(spiID, hz, numPixels, channels)
+	strip, err := strip.Init(logr, spiID, hz, numPixels, channels)
 
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		logr.Panic("unable to initalise the strip", zap.Error(err))
 	}
 
 	if !systemdUtil.IsRunningSystemd() {
-		fmt.Errorf("systemd is not running")
-		os.Exit(1)
+		logr.Panic("systemd is not running", zap.Error(err))
 	}
 
 	conn, err := systemd.New()
 
 	if err != nil {
-		fmt.Errorf("systemd unable to connect, running as root?")
-		os.Exit(1)
+		logr.Panic("systemd unable to connect, running as root?", zap.Error(err))
 	}
 	err = conn.Subscribe()
 	if err != nil {
-		fmt.Errorf("systemd subscribe failed")
-		os.Exit(1)
+		logr.Panic("systemd subscribed failed", zap.Error(err))
 	}
 	set := conn.NewSubscriptionSet() // no error should be returned
 	services := []string{"sshd.service", "minecraft.service", "local-exporter.service","zincati.service", "node-exporter.service"}
 	for _, svc := range services {
 		pixel, err := strip.Add(svc)
-		fmt.Println(reflect.TypeOf(pixel))
 		if err != nil {
-			fmt.Println(err)
+			logr.Panic("Error calling Strip.Add:", zap.Error(err))
 		}
 		go addService(conn, set, pixel)
 	}

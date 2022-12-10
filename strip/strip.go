@@ -1,6 +1,7 @@
 package strip
 
 import (
+	
 	"bytes"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"periph.io/x/devices/v3/nrzled"
 	"periph.io/x/host/v3"
 	"time"
+	"github.com/jar-o/limlog"
 )
 
 var (
@@ -19,6 +21,7 @@ var (
 )
 
 type Strip struct {
+	Logger   *limlog.Limlog
 	SPIBus   *string
 	HRz      physic.Frequency
 	Channels *int
@@ -28,9 +31,10 @@ type Strip struct {
 	spidev   spi.PortCloser
 }
 
-func Init(spiBus *string, hrz physic.Frequency, count *int, channels *int) (*Strip, error) {
+func Init(logger *limlog.Limlog, spiBus *string, hrz physic.Frequency, count *int, channels *int) (*Strip, error) {
 
 	strip := &Strip{}
+        strip.Logger = logger
 	strip.SPIBus = spiBus
 	strip.HRz = hrz
 	strip.Count = count
