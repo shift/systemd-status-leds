@@ -1,7 +1,6 @@
 package led
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -39,9 +38,4 @@ func (l *Led) SetWhite(w int64) {
 
 func (l *Led) SetColour(colour string) {
 	l.Colour = colour
-}
-
-
-func (l Led) getStatus() {
-	fmt.Printf("Red: %i, Green: %i, Blue: %i, White: %i", l.Red, l.Green, l.Blue, l.White)
 }

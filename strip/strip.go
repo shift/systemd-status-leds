@@ -1,19 +1,18 @@
 package strip
 
 import (
-	
 	"bytes"
 	"errors"
 	"fmt"
-	"strconv"
+	"github.com/jar-o/limlog"
 	"github.com/shift/fcos-mc-pi4/leds/led"
 	"periph.io/x/conn/v3/physic"
 	"periph.io/x/conn/v3/spi"
 	"periph.io/x/conn/v3/spi/spireg"
 	"periph.io/x/devices/v3/nrzled"
 	"periph.io/x/host/v3"
+	"strconv"
 	"time"
-	"github.com/jar-o/limlog"
 )
 
 var (
@@ -34,7 +33,7 @@ type Strip struct {
 func Init(logger *limlog.Limlog, spiBus *string, hrz physic.Frequency, count *int, channels *int) (*Strip, error) {
 
 	strip := &Strip{}
-        strip.Logger = logger
+	strip.Logger = logger
 	strip.SPIBus = spiBus
 	strip.HRz = hrz
 	strip.Count = count
@@ -50,8 +49,8 @@ func Init(logger *limlog.Limlog, spiBus *string, hrz physic.Frequency, count *in
 	}
 	//defer s.Close()
 
-	if p, ok := strip.spidev.(spi.Pins); ok {
-		fmt.Printf("Using pins CLK: %s  MOSI: %s  MISO: %s", p.CLK(), p.MOSI(), p.MISO())
+	if _, ok := strip.spidev.(spi.Pins); ok {
+		//		strip.Logger.Infof("Using pins: %i, %i ,%i", p.CLK(), p.MOSI(), p.MISO())
 	}
 	o := nrzled.Opts{
 		NumPixels: *strip.Count,
@@ -89,16 +88,16 @@ func (strip *Strip) Add(unit string) (pixel *led.Led, err error) {
 func (s *Strip) UpdateLoop() {
 	buf := make([]byte, 5*4)
 	for {
-			fmt.Println("start")
+		fmt.Println("start")
 		for _, p := range s.Pixels {
-			offset := (p.Number-1)*4
+			offset := (p.Number - 1) * 4
 			rgba, _ := strconv.ParseUint(p.Colour, 16, 32)
 			buf[offset] = byte(rgba >> 24)
 			buf[offset+1] = byte(rgba >> 16)
 			buf[offset+2] = byte(rgba >> 8)
 			buf[offset+3] = byte(rgba)
 		}
-			fmt.Println("end")
+		fmt.Println("end")
 		fmt.Println(buf)
 		_, _ = s.Display.Write(buf)
 		time.Sleep(5 * time.Second)
