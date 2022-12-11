@@ -1,8 +1,23 @@
 services:
-    - network.target
-    - minecraft.service
-    - multi-user.target
-    - local-exporter.service
-    - node-exporter.service
+    - name: network.target
+      states_map:
+        active: 00ff5500
+    - name: minecraft.service
+      states_map:
+        active: 00ff9900
+    - name: multi-user.target
+    - name: local-exporter.service
+    - name: node-exporter.service
 strip:
+    spidev: "0.0"
+    channels: 4
     length: 5
+    hertz: 1200
+    colours:
+      active: 00ff0000
+      inactive: 01010101
+      reloading: 11551100
+      failed: 55002200
+      activating: 00442200
+      deactivating: 22440000
+

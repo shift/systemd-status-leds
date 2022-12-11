@@ -3,7 +3,6 @@ package strip
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/jar-o/limlog"
 	"github.com/shift/fcos-mc-pi4/leds/led"
 	"periph.io/x/conn/v3/physic"
@@ -30,13 +29,12 @@ type Strip struct {
 	spidev   spi.PortCloser
 }
 
-func Init(logger *limlog.Limlog, spiBus *string, hrz physic.Frequency, count *int, channels *int) (*Strip, error) {
+func Init(logger *limlog.Limlog, spibus *string, length *int, channels *int, hertz *int) (*Strip, error) {
 
 	strip := &Strip{}
 	strip.Logger = logger
-	strip.SPIBus = spiBus
-	strip.HRz = hrz
-	strip.Count = count
+	strip.SPIBus = spibus
+	strip.Count = length
 	strip.Channels = channels
 
 	if _, err := host.Init(); err != nil {
@@ -61,12 +59,7 @@ func Init(logger *limlog.Limlog, spiBus *string, hrz physic.Frequency, count *in
 	if err != nil {
 		return nil, err
 	}
-	ledlen, err := strip.Display.Write(bytes.Repeat(Loading, *strip.Count-1))
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(ledlen)
-	}
+	_, _ = strip.Display.Write(bytes.Repeat(Loading, *strip.Count-1))
 
 	return strip, nil
 }
@@ -88,7 +81,6 @@ func (strip *Strip) Add(unit string) (pixel *led.Led, err error) {
 func (s *Strip) UpdateLoop() {
 	buf := make([]byte, 5*4)
 	for {
-		fmt.Println("start")
 		for _, p := range s.Pixels {
 			offset := (p.Number - 1) * 4
 			rgba, _ := strconv.ParseUint(p.Colour, 16, 32)
@@ -97,8 +89,6 @@ func (s *Strip) UpdateLoop() {
 			buf[offset+2] = byte(rgba >> 8)
 			buf[offset+3] = byte(rgba)
 		}
-		fmt.Println("end")
-		fmt.Println(buf)
 		_, _ = s.Display.Write(buf)
 		time.Sleep(5 * time.Second)
 	}
