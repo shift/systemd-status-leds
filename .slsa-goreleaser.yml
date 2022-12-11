@@ -10,10 +10,7 @@ flags:
   - -tags=netgo
 
 goos: linux # same values as GOOS env variable.
-goarch: 
-  - amd64
-  - arm64
-  - armv7
+goarch: arm64
 
 # Entrypoint to compile. Default is the root directory.
 # main: ./path/to/main.go
