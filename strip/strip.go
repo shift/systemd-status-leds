@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/jar-o/limlog"
-	"github.com/shift/fcos-mc-pi4/leds/led"
+	"github.com/shift/systemd-status-leds/led"
 	"periph.io/x/conn/v3/physic"
 	"periph.io/x/conn/v3/spi"
 	"periph.io/x/conn/v3/spi/spireg"

@@ -1,11 +1,11 @@
-package main // github.com/shift/fcos-mc-pi4/leds
+package main // github.com/shift/systemd-status-leds
 
 import (
 	systemd "github.com/coreos/go-systemd/v22/dbus" // change namespace
 	systemdUtil "github.com/coreos/go-systemd/v22/util"
 	"github.com/godbus/dbus/v5" // namespace collides with systemd wrapper
-	"github.com/shift/fcos-mc-pi4/leds/led"
-	"github.com/shift/fcos-mc-pi4/leds/strip"
+	"github.com/shift/systemd-status-leds/led"
+	"github.com/shift/systemd-status-leds/strip"
 
 	"github.com/jar-o/limlog"
 	"github.com/spf13/viper"
