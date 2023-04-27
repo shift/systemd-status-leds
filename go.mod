@@ -9,7 +9,7 @@ require (
 	github.com/spf13/viper v1.15.0
 	go.uber.org/zap v1.24.0
 	periph.io/x/conn/v3 v3.7.0
-	periph.io/x/devices/v3 v3.7.0
+	periph.io/x/devices/v3 v3.7.1
 	periph.io/x/host/v3 v3.8.2
 )
 
