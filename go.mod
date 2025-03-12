@@ -2,8 +2,6 @@ module github.com/shift/systemd-status-leds
 
 go 1.22
 
-toolchain go1.23.2
-
 require (
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/godbus/dbus/v5 v5.1.0
