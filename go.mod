@@ -1,6 +1,8 @@
 module github.com/shift/systemd-status-leds
 
-go 1.22
+go 1.22.6
+
+toolchain go1.24.1
 
 require (
 	github.com/coreos/go-systemd/v22 v22.5.0
@@ -10,7 +12,7 @@ require (
 	go.uber.org/zap v1.24.0
 	periph.io/x/conn/v3 v3.7.1
 	periph.io/x/devices/v3 v3.7.1
-	periph.io/x/host/v3 v3.8.2
+	periph.io/x/host/v3 v3.8.3
 )
 
 require (
