@@ -125,7 +125,7 @@ impl LedCollection {
     /// Convert all LED colors to a byte buffer for SPI transmission
     pub fn to_buffer(&self, strip_length: usize) -> Vec<u8> {
         let mut buffer = vec![0u8; strip_length * 4]; // 4 bytes per LED (RGBW)
-        
+
         for led in &self.leds {
             let pos = led.position();
             if pos < strip_length {
@@ -134,7 +134,7 @@ impl LedCollection {
                 buffer[offset..offset + 4].copy_from_slice(&bytes);
             }
         }
-        
+
         buffer
     }
 
@@ -163,7 +163,7 @@ mod tests {
     fn test_led_color_operations() {
         let led = Led::new(0, "test.service".to_string());
         let color = Color::new(255, 128, 64, 32);
-        
+
         led.set_color(color);
         assert_eq!(led.color(), color);
         assert_eq!(led.to_bytes(), [255, 128, 64, 32]);
@@ -173,7 +173,7 @@ mod tests {
     fn test_led_service_state() {
         let led = Led::new(0, "test.service".to_string());
         let color = Color::new(0, 255, 0, 0);
-        
+
         led.set_service_state(ServiceState::Active, Some(color));
         assert_eq!(led.service_state(), ServiceState::Active);
         assert_eq!(led.color(), color);
@@ -182,10 +182,10 @@ mod tests {
     #[test]
     fn test_led_reset() {
         let led = Led::new(0, "test.service".to_string());
-        
+
         led.set_color(Color::new(255, 255, 255, 255));
         led.set_service_state(ServiceState::Active, None);
-        
+
         led.reset();
         assert_eq!(led.color(), Color::default());
         assert_eq!(led.service_state(), ServiceState::Unknown);
@@ -194,20 +194,20 @@ mod tests {
     #[test]
     fn test_led_collection() {
         let mut collection = LedCollection::new(3);
-        
+
         assert_eq!(collection.len(), 0);
         assert!(collection.is_empty());
-        
+
         collection.add_led("service1.service".to_string()).unwrap();
         collection.add_led("service2.service".to_string()).unwrap();
-        
+
         assert_eq!(collection.len(), 2);
         assert!(!collection.is_empty());
-        
+
         let led = collection.get_led(0).unwrap();
         assert_eq!(led.unit_name(), "service1.service");
         assert_eq!(led.position(), 0);
-        
+
         let led = collection.get_led_by_unit("service2.service").unwrap();
         assert_eq!(led.position(), 1);
     }
@@ -215,17 +215,23 @@ mod tests {
     #[test]
     fn test_led_collection_buffer() {
         let mut collection = LedCollection::new(3);
-        
+
         collection.add_led("service1.service".to_string()).unwrap();
         collection.add_led("service2.service".to_string()).unwrap();
-        
+
         // Set colors for the LEDs
-        collection.get_led(0).unwrap().set_color(Color::new(255, 0, 0, 0));
-        collection.get_led(1).unwrap().set_color(Color::new(0, 255, 0, 0));
-        
+        collection
+            .get_led(0)
+            .unwrap()
+            .set_color(Color::new(255, 0, 0, 0));
+        collection
+            .get_led(1)
+            .unwrap()
+            .set_color(Color::new(0, 255, 0, 0));
+
         let buffer = collection.to_buffer(4);
         assert_eq!(buffer.len(), 16); // 4 LEDs * 4 bytes each
-        
+
         // Check first LED color
         assert_eq!(&buffer[0..4], &[255, 0, 0, 0]);
         // Check second LED color
@@ -238,16 +244,22 @@ mod tests {
     #[test]
     fn test_led_collection_reset() {
         let mut collection = LedCollection::new(2);
-        
+
         collection.add_led("service1.service".to_string()).unwrap();
         collection.add_led("service2.service".to_string()).unwrap();
-        
+
         // Set some colors and states
-        collection.get_led(0).unwrap().set_color(Color::new(255, 255, 255, 255));
-        collection.get_led(1).unwrap().set_service_state(ServiceState::Active, Some(Color::new(0, 255, 0, 0)));
-        
+        collection
+            .get_led(0)
+            .unwrap()
+            .set_color(Color::new(255, 255, 255, 255));
+        collection
+            .get_led(1)
+            .unwrap()
+            .set_service_state(ServiceState::Active, Some(Color::new(0, 255, 0, 0)));
+
         collection.reset_all();
-        
+
         for led in collection.leds() {
             assert_eq!(led.color(), Color::default());
             assert_eq!(led.service_state(), ServiceState::Unknown);

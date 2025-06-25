@@ -33,15 +33,23 @@ pub struct Color {
 impl Color {
     /// Create a new color from RGBW values
     pub fn new(red: u8, green: u8, blue: u8, white: u8) -> Self {
-        Self { red, green, blue, white }
+        Self {
+            red,
+            green,
+            blue,
+            white,
+        }
     }
 
     /// Create a color from a hex string (format: "RRGGBBWW")
     pub fn from_hex(hex_str: &str) -> Result<Self> {
         let hex_str = hex_str.trim_start_matches("0x").trim_start_matches("#");
-        
+
         if hex_str.len() != 8 {
-            return Err(anyhow::anyhow!("Invalid hex color format: expected 8 characters, got {}", hex_str.len()));
+            return Err(anyhow::anyhow!(
+                "Invalid hex color format: expected 8 characters, got {}",
+                hex_str.len()
+            ));
         }
 
         let bytes = hex::decode(hex_str)?;
@@ -60,7 +68,10 @@ impl Color {
 
     /// Convert color to hex string
     pub fn to_hex(&self) -> String {
-        format!("{:02x}{:02x}{:02x}{:02x}", self.red, self.green, self.blue, self.white)
+        format!(
+            "{:02x}{:02x}{:02x}{:02x}",
+            self.red, self.green, self.blue, self.white
+        )
     }
 }
 

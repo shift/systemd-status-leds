@@ -78,7 +78,10 @@ impl Config {
                 Color::from_hex(color_str).map_err(|e| {
                     anyhow::anyhow!(
                         "Invalid color '{}' for state '{}' in service '{}': {}",
-                        color_str, state, service.name, e
+                        color_str,
+                        state,
+                        service.name,
+                        e
                     )
                 })?;
             }
@@ -146,8 +149,8 @@ impl Default for Config {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     const VALID_CONFIG: &str = r#"
 services:
@@ -187,7 +190,7 @@ strip:
     fn test_config_from_file() {
         let mut temp_file = NamedTempFile::new().unwrap();
         temp_file.write_all(VALID_CONFIG.as_bytes()).unwrap();
-        
+
         let config = Config::from_file(temp_file.path()).unwrap();
         assert_eq!(config.services.len(), 5);
     }
@@ -247,15 +250,15 @@ strip:
     #[test]
     fn test_get_color_for_state() {
         let config: Config = VALID_CONFIG.parse().unwrap();
-        
+
         // Test service-specific color
         let color = config.get_color_for_state(0, "active").unwrap();
         assert_eq!(color, Color::from_hex("00ff5500").unwrap());
-        
+
         // Test fallback to strip default
         let color = config.get_color_for_state(2, "active").unwrap();
         assert_eq!(color, Color::from_hex("00ff0000").unwrap());
-        
+
         // Test unknown state
         assert!(config.get_color_for_state(0, "unknown").is_none());
     }

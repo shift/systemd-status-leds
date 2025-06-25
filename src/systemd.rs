@@ -3,7 +3,7 @@
 //! This module provides functionality to connect to systemd via DBus and
 //! monitor service state changes, with support for mocking during testing.
 
-use crate::{ServiceState, Result};
+use crate::{Result, ServiceState};
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tokio::time;
@@ -27,13 +27,13 @@ pub struct ServiceEvent {
 pub trait SystemdInterface: Send + Sync {
     /// Check if systemd is running
     async fn is_running(&self) -> Result<bool>;
-    
+
     /// Get the current state of a unit
     async fn get_unit_state(&self, unit_name: &str) -> Result<ServiceState>;
-    
+
     /// Subscribe to state changes for a unit
     async fn subscribe_to_unit(&self, unit_name: &str) -> Result<()>;
-    
+
     /// Start monitoring for events (should be called in a separate task)
     async fn monitor_events(&self, event_sender: broadcast::Sender<ServiceEvent>) -> Result<()>;
 }
@@ -49,10 +49,12 @@ impl RealSystemdInterface {
     pub async fn new() -> Result<Self> {
         let connection = Connection::system().await?;
         info!("Connected to SystemD via DBus");
-        
+
         Ok(Self {
             connection,
-            subscribed_units: std::sync::Arc::new(std::sync::Mutex::new(std::collections::HashSet::new())),
+            subscribed_units: std::sync::Arc::new(std::sync::Mutex::new(
+                std::collections::HashSet::new(),
+            )),
         })
     }
 }
@@ -66,13 +68,14 @@ impl SystemdInterface for RealSystemdInterface {
             "org.freedesktop.systemd1",
             "/org/freedesktop/systemd1",
             "org.freedesktop.systemd1.Manager",
-        ).await?;
+        )
+        .await?;
 
         match proxy.get_property::<String>("Version").await {
             Ok(_) => {
                 debug!("SystemD is running");
                 Ok(true)
-            },
+            }
             Err(e) => {
                 warn!("SystemD not detected: {}", e);
                 Ok(false)
@@ -86,12 +89,11 @@ impl SystemdInterface for RealSystemdInterface {
             "org.freedesktop.systemd1",
             "/org/freedesktop/systemd1",
             "org.freedesktop.systemd1.Manager",
-        ).await?;
+        )
+        .await?;
 
         // Get unit object path
-        let unit_path_reply = proxy
-            .call_method("GetUnit", &(unit_name,))
-            .await?;
+        let unit_path_reply = proxy.call_method("GetUnit", &(unit_name,)).await?;
         let unit_path: zbus::zvariant::OwnedObjectPath = unit_path_reply.body().deserialize()?;
 
         // Get unit properties
@@ -100,7 +102,8 @@ impl SystemdInterface for RealSystemdInterface {
             "org.freedesktop.systemd1",
             unit_path.as_str(),
             "org.freedesktop.systemd1.Unit",
-        ).await?;
+        )
+        .await?;
 
         let active_state: String = unit_proxy.get_property("ActiveState").await?;
         let load_state: String = unit_proxy.get_property("LoadState").await?;
@@ -130,34 +133,35 @@ impl SystemdInterface for RealSystemdInterface {
             "org.freedesktop.systemd1",
             "/org/freedesktop/systemd1",
             "org.freedesktop.systemd1.Manager",
-        ).await?;
+        )
+        .await?;
 
         proxy.call_method("Subscribe", &()).await?;
-        
+
         info!("Subscribed to state changes for unit '{}'", unit_name);
         Ok(())
     }
 
     async fn monitor_events(&self, event_sender: broadcast::Sender<ServiceEvent>) -> Result<()> {
         info!("Starting SystemD event monitoring");
-        
+
         // This is a simplified implementation. In a real scenario, you'd want to:
         // 1. Listen for PropertiesChanged signals
         // 2. Parse the signals to extract unit state changes
         // 3. Send events through the broadcast channel
-        
+
         // For now, we'll implement a polling mechanism as a fallback
         let mut interval = time::interval(Duration::from_secs(5));
         let subscribed_units = self.subscribed_units.clone();
-        
+
         loop {
             interval.tick().await;
-            
+
             let units: Vec<String> = {
                 let guard = subscribed_units.lock().unwrap();
                 guard.iter().cloned().collect()
             };
-            
+
             for unit_name in units {
                 match self.get_unit_state(&unit_name).await {
                     Ok(state) => {
@@ -166,7 +170,7 @@ impl SystemdInterface for RealSystemdInterface {
                             state,
                             timestamp: std::time::SystemTime::now(),
                         };
-                        
+
                         if let Err(e) = event_sender.send(event) {
                             warn!("Failed to send event for unit '{}': {}", unit_name, e);
                         }
@@ -198,7 +202,7 @@ impl SystemdMonitor {
     /// Create a new SystemD monitor with custom interface (for testing)
     pub async fn with_interface(interface: Box<dyn SystemdInterface>) -> Result<Self> {
         let (event_sender, event_receiver) = broadcast::channel(100);
-        
+
         Ok(Self {
             interface,
             event_sender,
@@ -214,26 +218,29 @@ impl SystemdMonitor {
     /// Add a service to monitor
     pub async fn add_service(&self, unit_name: &str) -> Result<()> {
         info!("Adding service '{}' to monitoring", unit_name);
-        
+
         // Check if unit exists and get initial state
         match self.interface.get_unit_state(unit_name).await {
             Ok(state) => {
                 info!("Unit '{}' initial state: {:?}", unit_name, state);
-                
+
                 // Subscribe to changes
                 self.interface.subscribe_to_unit(unit_name).await?;
-                
+
                 // Send initial state event
                 let event = ServiceEvent {
                     unit_name: unit_name.to_string(),
                     state,
                     timestamp: std::time::SystemTime::now(),
                 };
-                
+
                 if let Err(e) = self.event_sender.send(event) {
-                    warn!("Failed to send initial event for unit '{}': {}", unit_name, e);
+                    warn!(
+                        "Failed to send initial event for unit '{}': {}",
+                        unit_name, e
+                    );
                 }
-                
+
                 Ok(())
             }
             Err(e) => {
@@ -251,7 +258,9 @@ impl SystemdMonitor {
     /// Start the monitoring loop (should be called in a separate task)
     pub async fn start_monitoring(&self) -> Result<()> {
         info!("Starting SystemD monitoring loop");
-        self.interface.monitor_events(self.event_sender.clone()).await
+        self.interface
+            .monitor_events(self.event_sender.clone())
+            .await
     }
 
     /// Get the current state of a unit
@@ -283,13 +292,13 @@ mod tests {
     #[tokio::test]
     async fn test_add_service() {
         let mut mock_interface = MockSystemdInterface::new();
-        
+
         mock_interface
             .expect_get_unit_state()
             .with(eq("test.service"))
             .times(1)
             .returning(|_| Ok(ServiceState::Active));
-        
+
         mock_interface
             .expect_subscribe_to_unit()
             .with(eq("test.service"))
@@ -306,13 +315,13 @@ mod tests {
     #[tokio::test]
     async fn test_event_subscription() {
         let mut mock_interface = MockSystemdInterface::new();
-        
+
         mock_interface
             .expect_get_unit_state()
             .with(eq("test.service"))
             .times(1)
             .returning(|_| Ok(ServiceState::Active));
-        
+
         mock_interface
             .expect_subscribe_to_unit()
             .with(eq("test.service"))
@@ -324,16 +333,16 @@ mod tests {
             .unwrap();
 
         let mut event_receiver = monitor.subscribe_to_events();
-        
+
         // Add service should trigger an initial event
         monitor.add_service("test.service").await.unwrap();
-        
+
         // Wait for the event with timeout
         let event = timeout(Duration::from_millis(100), event_receiver.recv())
             .await
             .expect("Timeout waiting for event")
             .expect("Failed to receive event");
-        
+
         assert_eq!(event.unit_name, "test.service");
         assert_eq!(event.state, ServiceState::Active);
     }
@@ -343,7 +352,10 @@ mod tests {
         assert_eq!(ServiceState::from("active"), ServiceState::Active);
         assert_eq!(ServiceState::from("inactive"), ServiceState::Inactive);
         assert_eq!(ServiceState::from("activating"), ServiceState::Activating);
-        assert_eq!(ServiceState::from("deactivating"), ServiceState::Deactivating);
+        assert_eq!(
+            ServiceState::from("deactivating"),
+            ServiceState::Deactivating
+        );
         assert_eq!(ServiceState::from("reloading"), ServiceState::Reloading);
         assert_eq!(ServiceState::from("failed"), ServiceState::Failed);
         assert_eq!(ServiceState::from("unknown"), ServiceState::Unknown);

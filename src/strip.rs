@@ -33,7 +33,7 @@ impl RealSpiDevice {
             .write(true)
             .open(&path)
             .map_err(|e| anyhow::anyhow!("Failed to open SPI device {}: {}", path, e))?;
-        
+
         info!("Opened SPI device: {}", path);
         Ok(Self { device })
     }
@@ -78,7 +78,7 @@ impl Strip {
     pub fn with_spi_device(config: StripConfig, spi_device: Box<dyn SpiDevice>) -> Result<Self> {
         let led_collection = LedCollection::new(config.length);
         let update_interval = Duration::from_millis(1000 / config.frequency as u64);
-        
+
         Ok(Self {
             config,
             spi_device,
@@ -98,7 +98,11 @@ impl Strip {
         }
 
         self.led_collection.add_led(unit_name.clone())?;
-        info!("Added service '{}' to LED position {}", unit_name, self.led_collection.len() - 1);
+        info!(
+            "Added service '{}' to LED position {}",
+            unit_name,
+            self.led_collection.len() - 1
+        );
         Ok(())
     }
 
@@ -110,15 +114,16 @@ impl Strip {
     /// Update the LED strip with current LED states
     pub fn update(&mut self) -> Result<()> {
         let buffer = self.led_collection.to_buffer(self.config.length);
-        
+
         debug!("Updating LED strip with {} bytes", buffer.len());
-        
+
         match self.spi_device.write(&buffer) {
             Ok(bytes_written) => {
                 if bytes_written != buffer.len() {
                     warn!(
                         "Partial write to SPI device: {} of {} bytes written",
-                        bytes_written, buffer.len()
+                        bytes_written,
+                        buffer.len()
                     );
                 }
                 self.last_update = Instant::now();
@@ -133,13 +138,16 @@ impl Strip {
 
     /// Start the update loop that continuously refreshes the LED strip
     pub async fn run_update_loop(&mut self) -> Result<()> {
-        info!("Starting LED strip update loop ({}Hz)", self.config.frequency);
-        
+        info!(
+            "Starting LED strip update loop ({}Hz)",
+            self.config.frequency
+        );
+
         let mut interval = time::interval(self.update_interval);
-        
+
         loop {
             interval.tick().await;
-            
+
             if let Err(e) = self.update() {
                 error!("Error updating LED strip: {}", e);
                 // Continue running even if individual updates fail
@@ -206,7 +214,7 @@ mod tests {
         mock_spi.expect_write().returning(|data| Ok(data.len()));
 
         let strip = Strip::with_spi_device(config.clone(), Box::new(mock_spi)).unwrap();
-        
+
         assert_eq!(strip.config().length, 5);
         assert_eq!(strip.config().channels, 4);
         assert_eq!(strip.service_count(), 0);
@@ -226,15 +234,15 @@ mod tests {
         mock_spi.expect_write().returning(|data| Ok(data.len()));
 
         let mut strip = Strip::with_spi_device(config, Box::new(mock_spi)).unwrap();
-        
+
         strip.add_service("service1.service".to_string()).unwrap();
         assert_eq!(strip.service_count(), 1);
         assert!(!strip.is_full());
-        
+
         strip.add_service("service2.service".to_string()).unwrap();
         assert_eq!(strip.service_count(), 2);
         assert!(strip.is_full());
-        
+
         // Should fail to add more services
         assert!(strip.add_service("service3.service".to_string()).is_err());
     }
@@ -253,22 +261,22 @@ mod tests {
         // Will be called once for explicit update() and once during drop
         mock_spi
             .expect_write()
-            .times(2) 
+            .times(2)
             .withf(|data| data.len() == 8)
             .returning(|data| Ok(data.len()));
 
         {
             let mut strip = Strip::with_spi_device(config, Box::new(mock_spi)).unwrap();
-            
+
             strip.add_service("service1.service".to_string()).unwrap();
             strip.add_service("service2.service".to_string()).unwrap();
-            
+
             // Set colors
             let led1 = strip.led_collection().get_led(0).unwrap();
             let led2 = strip.led_collection().get_led(1).unwrap();
             led1.set_color(Color::new(255, 0, 0, 0));
             led2.set_color(Color::new(0, 255, 0, 0));
-            
+
             strip.update().unwrap();
         } // strip is dropped here, triggering another write call
     }
@@ -286,12 +294,12 @@ mod tests {
         mock_spi.expect_write().returning(|data| Ok(data.len()));
 
         let mut strip = Strip::with_spi_device(config, Box::new(mock_spi)).unwrap();
-        
+
         strip.add_service("service1.service".to_string()).unwrap();
         strip.add_service("service2.service".to_string()).unwrap();
-        
+
         strip.set_loading_pattern().unwrap();
-        
+
         let loading_color = Color::new(60, 60, 60, 60);
         for led in strip.led_collection().leds() {
             assert_eq!(led.color(), loading_color);
@@ -311,15 +319,15 @@ mod tests {
         mock_spi.expect_write().returning(|data| Ok(data.len()));
 
         let mut strip = Strip::with_spi_device(config, Box::new(mock_spi)).unwrap();
-        
+
         strip.add_service("service1.service".to_string()).unwrap();
-        
+
         // Set a color
         let led = strip.led_collection().get_led(0).unwrap();
         led.set_color(Color::new(255, 255, 255, 255));
-        
+
         strip.turn_off_all();
-        
+
         assert_eq!(led.color(), Color::default());
     }
 

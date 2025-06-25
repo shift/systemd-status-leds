@@ -76,17 +76,17 @@ async fn main() -> Result<()> {
     // Add services to monitoring
     for (index, service) in config.services.iter().enumerate() {
         info!("Adding service '{}' to position {}", service.name, index);
-        
+
         // Add service to strip
         strip.add_service(service.name.clone())?;
-        
+
         // Add service to systemd monitoring
         systemd_monitor.add_service(&service.name).await?;
     }
 
     // Start monitoring tasks
     let mut event_receiver = systemd_monitor.subscribe_to_events();
-    
+
     // Start systemd monitoring task
     let monitor_handle = {
         let systemd_monitor = systemd_monitor;
@@ -137,9 +137,11 @@ async fn main() -> Result<()> {
                     if let Some(color) = config_clone.get_color_for_state(index, state_str) {
                         info!(
                             "Setting LED {} to color {} for service '{}'",
-                            index, color.to_hex(), event.unit_name
+                            index,
+                            color.to_hex(),
+                            event.unit_name
                         );
-                        
+
                         // In a real implementation, we'd need to get access to the strip here
                         // For now, we'll log the color change
                         // This would require refactoring to share strip access between tasks
