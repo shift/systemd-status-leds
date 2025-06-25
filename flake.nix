@@ -31,6 +31,7 @@
           rustToolchain
           cargo-watch
           cargo-edit
+          cargo-auditable  # For embedding audit info in binaries
           
           # Testing tools
           cargo-tarpaulin  # For coverage
@@ -67,8 +68,8 @@
             mkdir -p $out/bin
             mkdir -p $out/etc/systemd-status-leds
             
-            # Install binary
-            cargo install --path . --root $out
+            # Install binary with embedded audit info
+            cargo auditable install --path . --root $out
             
             # Install example configuration
             cp config.yaml $out/etc/systemd-status-leds/config.yaml.example
@@ -99,11 +100,13 @@
             echo "🦀 Rust development environment for systemd-status-leds"
             echo "Available commands:"
             echo "  cargo build          - Build the project"
+            echo "  cargo auditable build - Build with embedded audit info"
             echo "  cargo test           - Run tests"
             echo "  cargo run            - Run the application"
             echo "  cargo clippy         - Run linter"
             echo "  cargo fmt            - Format code"
             echo "  cargo tarpaulin      - Generate test coverage"
+            echo "  cargo audit bin <binary> - Check embedded audit info"
             echo ""
             echo "To build and test:"
             echo "  nix build            - Build the package"
@@ -142,7 +145,24 @@
             touch $out
           '';
 
-
+          # Audit check - build with embedded audit info
+          audit = pkgs.runCommand "check-audit" {
+            buildInputs = buildInputs;
+            PKG_CONFIG_PATH = "${pkgs.systemd.dev}/lib/pkgconfig:${pkgs.dbus.dev}/lib/pkgconfig";
+          } ''
+            # Build with cargo-auditable to embed audit information
+            cd ${./.}
+            cargo auditable build --release
+            
+            # Verify the binary was built successfully with auditable
+            if [ ! -f target/release/systemd-status-leds ]; then
+              echo "Failed to build binary with cargo auditable"
+              exit 1
+            fi
+            
+            echo "Binary built successfully with embedded audit information"
+            touch $out
+          '';
 
           # Build check
           build = rustPackage;
