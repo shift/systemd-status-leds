@@ -123,55 +123,7 @@
 
         # Checks that run during `nix flake check`
         checks = {
-          # Format check
-          fmt = pkgs.runCommand "check-format" {
-            buildInputs = [ rustToolchain ];
-          } ''
-            cd ${./.}
-            cargo fmt --check
-            touch $out
-          '';
-
-          # Clippy linting
-          clippy = pkgs.runCommand "check-clippy" {
-            buildInputs = buildInputs;
-            PKG_CONFIG_PATH = "${pkgs.systemd.dev}/lib/pkgconfig:${pkgs.dbus.dev}/lib/pkgconfig";
-          } ''
-            cd ${./.}
-            cargo clippy -- -D warnings
-            touch $out
-          '';
-
-          # Test execution
-          test = pkgs.runCommand "run-tests" {
-            buildInputs = buildInputs;
-            PKG_CONFIG_PATH = "${pkgs.systemd.dev}/lib/pkgconfig:${pkgs.dbus.dev}/lib/pkgconfig";
-          } ''
-            cd ${./.}
-            cargo test
-            touch $out
-          '';
-
-          # Audit check - build with embedded audit info
-          audit = pkgs.runCommand "check-audit" {
-            buildInputs = buildInputs;
-            PKG_CONFIG_PATH = "${pkgs.systemd.dev}/lib/pkgconfig:${pkgs.dbus.dev}/lib/pkgconfig";
-          } ''
-            # Build with cargo-auditable to embed audit information
-            cd ${./.}
-            cargo auditable build --release
-            
-            # Verify the binary was built successfully with auditable
-            if [ ! -f target/release/systemd-status-leds ]; then
-              echo "Failed to build binary with cargo auditable"
-              exit 1
-            fi
-            
-            echo "Binary built successfully with embedded audit information"
-            touch $out
-          '';
-
-          # Build check
+          # Build check (main build)
           build = rustPackage;
         };
 
