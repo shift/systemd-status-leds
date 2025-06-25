@@ -1,0 +1,26 @@
+# Rust build artifacts
+/target
+
+# Cargo lock for libraries (keep for applications)
+# Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime files
+*.log
+
+# Test coverage
+tarpaulin-report.html
+cobertura.xml
+
+# Nix build result
+result
+result-*

@@ -1,0 +1,36 @@
+[package]
+name = "systemd-status-leds"
+version = "0.1.0"
+edition = "2021"
+authors = ["shift <1653+shift@users.noreply.github.com>"]
+description = "A Rust application that monitors systemd service status and displays it on WS281x RGBW LED strips via SPI"
+license = "Apache-2.0"
+repository = "https://github.com/shift/systemd-status-leds"
+readme = "README.md"
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+zbus = "5.0"
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4.0", features = ["derive"] }
+hex = "0.4"
+spidev = "0.6"
+async-trait = "0.1"
+
+[dev-dependencies]
+mockall = "0.13"
+tokio-test = "0.4"
+tempfile = "3.0"
+
+[lib]
+name = "systemd_status_leds"
+path = "src/lib.rs"
+
+[[bin]]
+name = "systemd-status-leds"
+path = "src/main.rs"
