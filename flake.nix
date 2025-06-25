@@ -5,9 +5,10 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay.url = "github:oxalica/rust-overlay";
+    mcp-nixos.url = "github:utensils/mcp-nixos";
   };
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay }:
+  outputs = { self, nixpkgs, flake-utils, rust-overlay, mcp-nixos }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [ (import rust-overlay) ];
@@ -35,6 +36,9 @@
           
           # Testing tools
           cargo-tarpaulin  # For coverage
+          
+          # MCP NixOS for AI-assisted development
+          mcp-nixos.packages.${system}.default
         ];
 
         # Native build inputs (build-time dependencies)
@@ -89,6 +93,7 @@
         # Default package
         packages.default = rustPackage;
         packages.systemd-status-leds = rustPackage;
+        packages.mcp-nixos = mcp-nixos.packages.${system}.default;
 
         # Development shell
         devShells.default = pkgs.mkShell {
@@ -107,10 +112,12 @@
             echo "  cargo fmt            - Format code"
             echo "  cargo tarpaulin      - Generate test coverage"
             echo "  cargo audit bin <binary> - Check embedded audit info"
+            echo "  mcp-nixos            - Start MCP NixOS server for AI assistance"
             echo ""
             echo "To build and test:"
             echo "  nix build            - Build the package"
             echo "  nix flake check      - Run all checks"
+            echo "  nix run .#mcp-nixos  - Run MCP NixOS server"
           '';
         };
 
@@ -172,6 +179,11 @@
         apps.default = flake-utils.lib.mkApp {
           drv = rustPackage;
           name = "systemd-status-leds";
+        };
+        
+        apps.mcp-nixos = flake-utils.lib.mkApp {
+          drv = mcp-nixos.packages.${system}.default;
+          name = "mcp-nixos";
         };
 
         # Formatter for `nix fmt`

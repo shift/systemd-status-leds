@@ -137,6 +137,27 @@ nix build
 
 # Format Nix files
 nix fmt
+
+# Run MCP NixOS server for AI assistance
+nix run .#mcp-nixos
+```
+
+### AI-Assisted Development
+
+This project includes [MCP NixOS](https://github.com/utensils/mcp-nixos) integration for AI-assisted development. When you enter the development environment with `nix develop`, the MCP NixOS server is available to provide your AI assistant with accurate, real-time information about:
+
+- **NixOS packages** (130K+ packages)
+- **Configuration options** (22K+ options)
+- **Home Manager settings** (4K+ options)
+- **nix-darwin configurations** (1K+ macOS settings)
+
+To use with AI assistants like Cursor or other MCP-compatible tools, run:
+```bash
+# Start MCP NixOS server
+mcp-nixos
+
+# Or via nix
+nix run .#mcp-nixos
 ```
 
 ## Architecture
