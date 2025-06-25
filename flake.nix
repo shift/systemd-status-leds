@@ -72,7 +72,7 @@
             cargo install --path . --root $out
             
             # Install example configuration
-            cp config $out/etc/systemd-status-leds/config.yaml.example
+            cp config.yaml $out/etc/systemd-status-leds/config.yaml.example
           '';
           
           meta = with pkgs.lib; {
