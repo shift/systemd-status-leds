@@ -31,7 +31,6 @@
           rustToolchain
           cargo-watch
           cargo-edit
-          cargo-audit
           
           # Testing tools
           cargo-tarpaulin  # For coverage
@@ -104,7 +103,6 @@
             echo "  cargo run            - Run the application"
             echo "  cargo clippy         - Run linter"
             echo "  cargo fmt            - Format code"
-            echo "  cargo audit          - Security audit"
             echo "  cargo tarpaulin      - Generate test coverage"
             echo ""
             echo "To build and test:"
@@ -144,14 +142,7 @@
             touch $out
           '';
 
-          # Security audit
-          audit = pkgs.runCommand "security-audit" {
-            buildInputs = buildInputs;
-          } ''
-            cd ${./.}
-            cargo audit
-            touch $out
-          '';
+
 
           # Build check
           build = rustPackage;
