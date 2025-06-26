@@ -24,3 +24,6 @@ cobertura.xml
 # Nix build result
 result
 result-*
+
+# Binary artifacts
+systemd-status-leds
