@@ -1,9 +1,9 @@
 module github.com/shift/systemd-status-leds
 
-go 1.22
+go 1.23
 
 require (
-	github.com/coreos/go-systemd/v22 v22.5.0
+	github.com/coreos/go-systemd/v22 v22.7.0
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/jar-o/limlog v0.0.0-20200826200915-9d66a36febe9
 	github.com/spf13/viper v1.20.1
