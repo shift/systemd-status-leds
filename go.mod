@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/coreos/go-systemd/v22 v22.5.0
-	github.com/godbus/dbus/v5 v5.1.0
+	github.com/godbus/dbus/v5 v5.2.2
 	github.com/jar-o/limlog v0.0.0-20200826200915-9d66a36febe9
 	github.com/spf13/viper v1.20.1
 	go.uber.org/zap v1.24.0
